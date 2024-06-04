@@ -3,24 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Country;
+use App\Models\State;
+use App\Models\City;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
-use App\Http\Requests\ProductStoreRequest;
-use App\Http\Requests\ProductUpdateRequest;
+// use App\Http\Requests\ProductStoreRequest;
+// use App\Http\Requests\ProductUpdateRequest;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
+     *
+     * @return response()
      */
     public function index(): View
     {
         $products = Product::latest()->paginate(5);
-
-        return view('products.index', compact('products'))
-                    ->with('i', (request()->input('page', 1) - 1) * 5);
+        return view('products.index',compact('products'))->with('i', (request()->input('page', 1) - 1) * 5);
     }
 
     /**
@@ -28,18 +31,45 @@ class ProductController extends Controller
      */
     public function create(): View
     {
-        return view('products.create');
+        $data['countries'] = Country::get(["name", "id"]);
+        return view('products.create',$data);
+    }
+    public function fetchState(Request $request)
+    {
+        $data['states'] = State::where("country_id", $request->country_id)->get(["name", "id"]);
+        return response()->json($data);
+    }
+    public function fetchCity(Request $request)
+    {
+        $data['cities'] = City::where("state_id", $request->state_id)->get(["name", "id"]);
+        return response()->json($data);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(ProductStoreRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        Product::create($request->validated());
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required',
+            'detail' => 'required',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
 
-        return redirect()->route('products.index')
-                         ->with('success', 'Product created successfully.');
+        $input = $request->all();
+        $input['intCountry'] = Country::getCountryName($request->country_dropdown)->name;
+        $input['intState'] = State::getStateName($request->state_dropdown)->name;
+        $input['intCity'] = City::getCityName($request->city_dropdown)->name;
+        if ($image = $request->file('image')) {
+            $destinationPath = 'images/';
+            $profileImage = date('YmdHis') . "." . $image->getClientOriginalExtension();
+            $image->move($destinationPath, $profileImage);
+            $input['image'] = "$profileImage";
+        }
+
+        Product::create($input);
+        return redirect()->route('products.index')->with('success', 'Product created successfully.');
     }
 
     /**
@@ -47,7 +77,7 @@ class ProductController extends Controller
      */
     public function show(Product $product): View
     {
-        return view('products.show',compact('product'));
+        return view('products.show', compact('product'));
     }
 
     /**
@@ -55,18 +85,34 @@ class ProductController extends Controller
      */
     public function edit(Product $product): View
     {
-        return view('products.edit',compact('product'));
+        return view('products.edit', compact('product'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(ProductUpdateRequest $request, Product $product): RedirectResponse
+    public function update(Request $request, Product $product): RedirectResponse
     {
-        $product->update($request->validated());
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required',
+            'detail' => 'required'
+        ]);
 
-        return redirect()->route('products.index')
-                        ->with('success','Product updated successfully');
+        $input = $request->all();
+
+        if ($image = $request->file('image')) {
+            $destinationPath = 'images/';
+            $profileImage = date('YmdHis') . "." . $image->getClientOriginalExtension();
+            $image->move($destinationPath, $profileImage);
+            $input['image'] = "$profileImage";
+        }else{
+            unset($input['image']);
+        }
+
+        $product->update($input);
+
+        return redirect()->route('products.index')->with('success', 'Product updated successfully');
     }
 
     /**
@@ -76,7 +122,6 @@ class ProductController extends Controller
     {
         $product->delete();
 
-        return redirect()->route('products.index')
-                        ->with('success','Product deleted successfully');
+        return redirect()->route('products.index')->with('success', 'Product deleted successfully');
     }
 }

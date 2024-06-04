@@ -15,8 +15,12 @@
             <thead>
                 <tr>
                     <th width="80px">No</th>
+                    <th>Image</th>
                     <th>Name</th>
                     <th>Email</th>
+                    <th>Country</th>
+                    <th>State</th>
+                    <th>City</th>
                     <th>Details</th>
                     <th width="250px">Action</th>
                 </tr>
@@ -25,8 +29,12 @@
             @forelse ($products as $product)
                 <tr>
                     <td>{{ ++$i }}</td>
+                    <td><img src="{{ asset('images/' . $product->image)}}" width="100px" height="25px"></td>
                     <td>{{ $product->name }}</td>
                     <td>{{ $product->email }}</td>
+                    <td>{{ $product->intCountry }}</td>
+                    <td>{{ $product->intState }}</td>
+                    <td>{{ $product->intCity }}</td>
                     <td>{{ $product->detail }}</td>
                     <td>
                         <form action="{{ route('products.destroy',$product->id) }}" method="POST">

@@ -8,7 +8,7 @@
                 <a class="btn btn-primary btn-sm" href="{{ route('products.index') }}"><i class="fa fa-arrow-left"></i>Back</a>
             </div>
 
-            <form action="{{ route('products.update', $product->id) }}" method="POST">
+            <form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="mb-3">
@@ -29,6 +29,14 @@
                     <label for="inputDetail" class="form-label"><strong>Detail:</strong></label>
                     <textarea class="form-control @error('detail') is-invalid @enderror" style="height:150px" name="detail" id="inputDetail" placeholder="Detail">{{ $product->detail }}</textarea>
                     @error('detail')
+                        <div class="form-text text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="mb-3">
+                    <label for="inputImage" class="form-label"><strong>Image:</strong></label>
+                    <input type="file" name="image" class="form-control @error('image') is-invalid @enderror" id="inputImage">
+                    <img src="{{ asset('images/' . $product->image)}}" width="100px">
+                    @error('image')
                         <div class="form-text text-danger">{{ $message }}</div>
                     @enderror
                 </div>

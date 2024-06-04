@@ -13,5 +13,9 @@ class Product extends Model
         'name',
         'email',
         'detail',
+        'image',
+        'intCountry',
+        'intState',
+        'intCity',
     ];
 }
